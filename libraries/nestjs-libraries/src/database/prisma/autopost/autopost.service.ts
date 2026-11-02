@@ -19,6 +19,11 @@ import { TypedSearchAttributes } from '@temporalio/common';
 import {
   organizationId,
 } from '@gitroom/nestjs-libraries/temporal/temporal.search.attribute';
+import {
+  getOpenAiBaseUrl,
+  getOpenAiImageModel,
+  getOpenAiModel,
+} from '@gitroom/nestjs-libraries/openai/openai.models';
 const parser = new Parser();
 
 interface WorkflowChannelsState {
@@ -37,13 +42,15 @@ interface WorkflowChannelsState {
 
 const model = new ChatOpenAI({
   apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-4.1',
+  model: getOpenAiModel('gpt-4.1'),
   temperature: 0.7,
+  configuration: { baseURL: getOpenAiBaseUrl() },
 });
 
 const dalle = new DallEAPIWrapper({
   apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'chatgpt-image-latest',
+  model: getOpenAiImageModel('chatgpt-image-latest'),
+  baseUrl: getOpenAiBaseUrl(),
 });
 
 const generateContent = z.object({

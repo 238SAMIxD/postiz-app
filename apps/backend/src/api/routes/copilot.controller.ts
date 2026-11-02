@@ -22,6 +22,11 @@ import { Request, Response } from 'express';
 import { RequestContext } from '@mastra/core/di';
 import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permissions.ability';
 import { AuthorizationActions, Sections } from '@gitroom/backend/services/auth/permissions/permission.exception.class';
+import {
+  getOpenAiBaseUrl,
+  getOpenAiLanguageModel,
+  getOpenAiModel,
+} from '@gitroom/nestjs-libraries/openai/openai.models';
 
 export type ChannelsContext = {
   integrations: string;
@@ -38,6 +43,15 @@ const copilotCors = () => ({
   ],
   credentials: !process.env.NOT_SECURED,
 });
+
+// the copilot runtime builds the default agent of /chat from getLanguageModel()
+class OpenAICompatibleAdapter extends OpenAIAdapter {
+  getLanguageModel() {
+    return getOpenAiBaseUrl()
+      ? getOpenAiLanguageModel(this.model)
+      : super.getLanguageModel();
+  }
+}
 
 @Controller('/copilot')
 export class CopilotController {
@@ -59,8 +73,8 @@ export class CopilotController {
       endpoint: '/copilot/chat',
       cors: copilotCors(),
       runtime: new CopilotRuntime(),
-      serviceAdapter: new OpenAIAdapter({
-        model: 'gpt-4.1',
+      serviceAdapter: new OpenAICompatibleAdapter({
+        model: getOpenAiModel('gpt-4.1'),
       }),
     });
 
